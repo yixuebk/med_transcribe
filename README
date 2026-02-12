@@ -1,1 +1,11 @@
-repo to host med transcribe project
+# Medical Transcription Project
+
+## Setup
+1. Go to the Django project root (transcriber/be/django_project/)
+
+2. Apply server migrations and collect static files
+    - python manage.py migrate
+    - python manage.py collectstatic
+
+2. Run server
+    - waitress-serve --host=127.0.0.1 --port=8000 django_project.wsgi:application

@@ -1,0 +1,12 @@
+Django==5.2.11
+pylint==4.0.4
+pylint-django==2.7.0
+django-ckeditor==6.7.3
+openai==2.20.0
+pydantic==2.12.5
+# NOTE: pydub requires Python 3.12 or earlier, standard library dependencies removed in 3.13
+pydub==0.25.1
+# Production WSGI server
+waitress==3.0.2
+# Serve static files
+whitenoise==6.11.0

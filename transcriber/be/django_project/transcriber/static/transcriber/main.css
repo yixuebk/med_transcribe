@@ -1,0 +1,72 @@
+/* Main stylesheet for the transcriber app */
+
+.rounded-bracket-borders {
+    /* Intended for <input type="file"> in center-justified elements.
+    This is to make the edges of the input element apparent due to the empty
+    space for showing the file name causing it to appear off-center.*/
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.medium-font-size {
+    font-size: medium;
+}
+
+.extra-horizontal-padding {
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+.delete-button {
+    background-color:red;
+    color: white;
+}
+
+.delete-button:active {
+    background-color:darkred;
+}
+
+.delete-button:hover {
+    background-color: rgb(255, 60, 60);
+}
+
+/* Spinner styling */
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 8px solid #ccc;
+    border-top: 8px solid darkgreen;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Animation for spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Overlay for spinner that can be used to cover an element with relative positioning */
+.absolute-flex-center-overlay {
+    display: flex;
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background-color: gray;
+    opacity: 70%;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Styling for table checkbox inputs */
+td input[type="checkbox"] {
+    scale: 1.5;
+}
+
+form.grid-div div {
+    display: grid;
+    padding-bottom: 12px;
+}

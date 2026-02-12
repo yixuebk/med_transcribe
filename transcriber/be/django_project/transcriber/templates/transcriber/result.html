@@ -1,0 +1,360 @@
+{% extends 'transcriber/base.html' %}
+{% load static %}
+
+{% block metadata %}
+    {% comment %} Google Material Symbols (local font file) {% endcomment %}
+    <link rel="stylesheet" href="{% static 'transcriber/material_symbols.css' %}">
+
+    <!-- Include lamejs from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const audioElement = document.querySelector('audio');
+            const loadingMessageElement = document.createElement('p');
+            loadingMessageElement.textContent = 'Loading...';
+
+            const audioElementParent = audioElement.parentElement;
+            audioElementParent.appendChild(loadingMessageElement);
+
+            // Fetch audio file from server
+            fetch("{% url 'transcriber:api_audio' query_id=query_id %}", {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            }).then((response) => response.json()
+            ).then((data) => {
+                // Convert b64 encoded audio bytes to a Blob and create a URL
+                const audioBase64 = data.context.audio_b64;
+                const audioBlob = new Blob(
+                    [new Uint8Array(atob(audioBase64).split("").map(c => c.charCodeAt(0)))],
+                    { type: 'audio/mp3' }
+                );
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                // Set the source of the audio element to the URL
+                audioElement.src = audioUrl;
+
+                // Remove the loading message
+                audioElementParent.removeChild(loadingMessageElement);
+
+                // Display the audio element
+                audioElement.style.display = 'block';
+            }).catch((error) => {
+                console.error('Error:', error);
+                loadingMessageElement.textContent = 'Error loading audio.';
+            });
+
+
+            // LLM voice input variables
+            let chatAudioContext;
+            let chatMicStream;
+            let chatScriptProcessor;
+            let chatMp3Encoder;
+            let chatMp3Data = [];
+
+            // LLM voice input  elements
+            const voiceChatStartBtn = document.getElementById('voiceChatStartBtn');
+            const voiceChatStopBtn = document.getElementById('voiceChatStopBtn');
+
+            function floatTo16BitPCM(input) {
+                const output = new Int16Array(input.length);
+                for (let i = 0; i < input.length; i++) {
+                    const s = Math.max(-1, Math.min(1, input[i]));
+                    output[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                return output;
+            }
+
+            // Voice chat buttons onclick actions
+            voiceChatStartBtn.onclick = async () => {
+                // Audio processing
+                chatAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                chatMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const source = chatAudioContext.createMediaStreamSource(chatMicStream);
+                chatScriptProcessor = chatAudioContext.createScriptProcessor(4096, 1, 1);
+                chatMp3Encoder = new lamejs.Mp3Encoder(1, chatAudioContext.sampleRate, 128);
+                chatMp3Data = [];
+
+                chatScriptProcessor.onaudioprocess = function (event) {
+                    const input = event.inputBuffer.getChannelData(0);
+                    const int16 = floatTo16BitPCM(input);
+                    const mp3buf = chatMp3Encoder.encodeBuffer(int16);
+                    if (mp3buf.length > 0) { chatMp3Data.push(new Int8Array(mp3buf));
+                    }
+                };
+
+                source.connect(chatScriptProcessor);
+                chatScriptProcessor.connect(chatAudioContext.destination);
+
+                // Button display/disable
+                voiceChatStartBtn.disabled = true;
+                voiceChatStartBtn.style.display = 'none';
+                voiceChatStopBtn.disabled = false;
+                voiceChatStopBtn.style.display = 'inline-flex';
+            }
+
+            voiceChatStopBtn.onclick = () => {
+                chatScriptProcessor.disconnect();
+                chatMicStream.getTracks().forEach(track => track.stop());
+                const mp3buf = chatMp3Encoder.flush();
+
+                if (mp3buf.length > 0) {
+                    chatMp3Data.push(new Int8Array(mp3buf));
+                }
+
+                const blob = new Blob(chatMp3Data, { type: 'audio/mp3' });
+                const url = URL.createObjectURL(blob);
+
+                voiceChatStartBtn.disabled = false;
+                voiceChatStartBtn.style.display = 'inline-flex';
+                voiceChatStopBtn.disabled = true;
+                voiceChatStopBtn.style.display = 'none';
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('file', blob, `instruction_audio.mp3`);
+                formData.append('instruction_audio', true);
+
+                const chatForm = document.getElementById('edit_chat');
+
+                // Show loading modal
+                textModal('Please wait for voice instruction transcription to complete...');
+
+                // Send form data to server
+                fetch("{% url 'transcriber:api_basic_transcribe' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: formData,
+                }).then((response) => response.json()
+                ).then((data) => {
+                    // Get form elements
+                    const form = document.getElementById('edit_chat');
+
+                    // Append transcript to input field
+                    form.input.value += ` ${data.context.transcript}`;
+
+                    // Hide modal
+                    closeModal();
+                }).catch((error) => {
+                    console.error('Error:', error);
+                });
+            };
+
+            // Get direct edit and LLM edit forms
+            const editSoapForm = document.getElementById('edit_soap');
+            const editSoapInstructForm = document.getElementById('edit_chat');
+
+            // Get loading spinner overlay for the editor
+            const loadingOverlay = document.getElementById('editor-spinner-overlay');
+
+            // CKEditor widget puts editable text inside the body of an <iframe>
+            // Use MutationObserver to detect when the iframe is loaded
+            const observer = new MutationObserver((mutations) => {
+                const iframe = document.querySelector('iframe');
+                if (iframe) {
+                    observer.disconnect();
+
+                    // SOAP note direct edit handling
+                    function editSoapNote(form) {
+                        // Get the form element and create a FormData object
+                        const formData = new FormData(form);
+
+                        // Get reformat form filename field for POST URL from transcript form (2 different forms possible)
+                        const reformatForm = document.getElementById('reformat') || document.getElementById('reformat_edited');
+                        formData.append('filename', reformatForm.filename.value);
+                        
+                        // Add distinguishing key for direct edit form
+                        formData.append('edit_soap', true)
+
+                        // Display loading overlay to cover editor
+                        loadingOverlay.style.display = 'flex';
+
+                        // Send form data to server
+                        fetch("{% url 'transcriber:api_update_soap'%}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                            },
+                            body: formData,
+                        }).then(
+                            response => response.json()
+                        ).then(data => {
+                            console.log('Form submitted successfully:', data);
+                            // No need to update as it should be the same as what is in the editor
+
+                            // Hide loading overlay
+                            loadingOverlay.style.display = 'none';
+                        }).catch(error => {
+                            console.error('Error submitting form:', error);
+                        });
+                    }
+
+                    document.getElementById('edit_soap').addEventListener('submit', function(event) {
+                        // Alternative form submit action
+                        editSoapNote(editSoapForm);
+                    });
+
+
+                    // SOAP note LLM edit handling
+                    function editSoapNoteWithInstruction(form) {
+                        // Get the form element and create a FormData object
+                        const formData = new FormData(form);
+
+                        // Get reformat form filename field for POST URL
+                        const reformatForm = document.getElementById('reformat') || document.getElementById('reformat_edited');
+                        formData.append('filename', reformatForm.filename.value);
+                        
+                        // Add distinguishing key for direct edit form
+                        formData.append('edit_chat', true)
+                        
+                        // Display loading overlay to cover editor
+                        loadingOverlay.style.display = 'flex';
+
+                        // Send form data to server
+                        fetch("{% url 'transcriber:api_update_soap'%}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                            },
+                            body: formData,
+                        }).then(
+                            response => response.json()
+                        ).then(data => {
+                            console.log('Form submitted successfully:', data);
+                            // Update iframe text editor
+                            iframe.contentDocument.body.innerHTML = data.context.transcription.formatted_text;
+                            // Clear instruction input
+                            form.input.value = '';
+
+                            // Hide loading overlay
+                            loadingOverlay.style.display = 'none';
+                        }).catch(error => {
+                            console.error('Error submitting form:', error);
+                        });
+                    }
+
+                    document.getElementById('edit_chat').addEventListener('submit', function(event) {
+                        // Alternative form submit action
+                        editSoapNoteWithInstruction(editSoapInstructForm);
+                    });
+                }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+            console.log('observer', observer);
+
+            // Disable default form submit
+            document.getElementById('edit_soap').addEventListener('submit', function(event) {
+                // Prevent the default form submission
+                event.preventDefault(); 
+            });
+            document.getElementById('edit_chat').addEventListener('submit', function(event) {
+                // Prevent the default form submission
+                event.preventDefault(); 
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block title %}Transcription Result{% endblock %}
+
+{% block content %}
+    {% comment %} Modal {% endcomment %}
+    <div id="modal" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-content">
+            </div>
+        </div>
+    </div>
+
+    {% if transcription %}
+        {% comment %} Side-by-side view of transcript and SOAP format {% endcomment %}
+        <h1>Transcription Results</h1>
+        <table style="width: 100%;">
+            <tr>
+                <td>
+                    <audio controls style="display: none;">
+                        <source src="" type="audio/mp3">
+                    </audio>
+                </td>
+                <td class="extra-horizontal-padding" style="width:50%;">
+                    
+                </td>
+            </tr>
+            <tr>
+                <td class="extra-horizontal-padding" style="vertical-align: top;border-right: solid 1px">
+                    <h3>Transcript</h3>
+                    {% if edit_original_transcript_form %}
+                        <form id='reformat' class="grid-div" method="post" action="{% url 'transcriber:result' query_id=query_id %}">
+                            {% csrf_token %}
+                            {{ edit_original_transcript_form }}
+                        </form>
+                    {% elif edit_modified_transcript_form %}
+                        <form id='reformat_edited' class="grid-div" method="post" action="{% url 'transcriber:result' query_id=query_id %}">
+                            {% csrf_token %}
+                            {{ edit_modified_transcript_form }}
+                        </form>
+                    {% endif %}
+                </td>
+                <td class="extra-horizontal-padding" style="vertical-align: top;">
+                    
+                    <h3>SOAP Format Results</h3>
+                    <span>
+                        {% if edit_original_transcript_form %}
+                        <button class="medium-font-size btn btn-secondary" form="reformat" type="submit" value="reformat" name="reformat">Regenerate from transcript</button>
+                        <br><br>
+                    {% elif edit_modified_transcript_form %}
+                        <button class="medium-font-size btn btn-secondary" form="reformat_edited" type="submit" value="reformat" name="reformat_edited">Regenerate from transcript</button>
+                        <br><br>
+                    {% endif %}
+                    </span>
+                    {% comment %} SOAP EDIT FORMS {% endcomment %}
+                    <form id='edit_soap' method="post" action="{% url 'transcriber:api_update_soap' %}">
+                        {% csrf_token %}
+                        {{ edit_soap_form.media }}
+                        {% for field in edit_soap_form %}
+                            <div id="soap-text-container" style="position: relative;">
+                                <div id="editor-spinner-overlay" class="absolute-flex-center-overlay" style="display: none;">
+                                    <div class="spinner" style="justify-self: center;"></div>
+                                </div>
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                        <button class="medium-font-size btn btn-secondary" form="edit_soap" type="submit" value="reformat" name="reformat_soap">Save</button>
+                    </form>
+                    <hr>
+                    <h3>Instruct Changes with Language Model</h3>
+                    <form id='edit_chat' method="post" action="{% url 'transcriber:api_update_soap' %}">
+                        {% csrf_token %}
+                        {% for field in edit_chat_form %}
+                            <div>{{ field }}</div>
+                        {% endfor %}
+                    </form>
+                    
+                    <button id="voiceChatStartBtn" class="medium-font-size btn btn-secondary" style="display:inline-flex;align-items:center;flex-direction:column;">
+                        <span class="material-symbols-outlined">
+                            voice_chat
+                        </span>
+                        Voice
+                    </button>
+                    <button id="voiceChatStopBtn" class="medium-font-size btn btn-secondary" style="display:none;align-items:center;flex-direction:column;">
+                        <span class="material-symbols-outlined">
+                            stop_circle
+                        </span>
+                    </button>
+                    <button class="medium-font-size btn btn-secondary" form="edit_chat" type="submit" value="reformat" name="reformat_chat" style="display:inline-flex;align-items:center;flex-direction:column;">
+                        <span class="material-symbols-outlined">
+                            send
+                        </span>
+                        Send
+                    </button>
+                </td>
+            </tr>
+        </table>
+        {% else %}
+        <p>No transcription results available.</p>
+    {% endif %}
+{% endblock %}
