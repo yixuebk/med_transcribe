@@ -1,0 +1,99 @@
+{% extends 'transcriber/pagination_base.html' %}
+{% load static %}
+
+{% block metadata %}
+    <script src="{% static 'transcriber/time_convert.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Button to initiate deletion
+            const initiateDeleteBtn = document.getElementById('initiateDeleteBtn');
+
+            // Modal messages (selected vs none selected)
+            const selected_message = document.getElementById('selected-message');
+            const none_selected_message = document.getElementById('none-selected-message');
+
+            initiateDeleteBtn.addEventListener('click', function() {
+                form = document.getElementById('delete_results');
+
+                // Check if any transcriptions are selected
+                let listChecked = form.querySelectorAll('input[name="id"]:checked');
+                if (listChecked.length > 0) {
+                    selected_message.style.display = 'grid';
+                    none_selected_message.style.display = 'none';
+                } else {
+                    selected_message.style.display = 'none';
+                    none_selected_message.style.display = 'grid';
+                }
+
+                // Show modal
+                staticModal();
+            });
+        });
+
+        function confirmDelete(button) {
+            // Hide first button
+            button.style.display = 'none';
+
+            // Show actual delete button with form submit
+            cell = button.parentElement;
+            deleteForm = cell.querySelector('form');
+            deleteForm.style.display = 'block';
+        }
+    </script>
+{% endblock %}
+
+{% block title %}List of Transcriptions{% endblock %}
+
+{% block paginated_content %}
+    {% comment %} Modal {% endcomment %}
+    <div id="modal" style="display: none;">
+        <div class="modal-container">
+            <div id="selected-message" class="modal-content" style="display: none;">
+                <p><b>Confirm Deletion</b></p>
+                <p>Deleting the transcription will delete the file stored in the media directory. Please make a copy elsewhere if you still need it.</p>
+                <br>
+                <button form="delete_results" type="submit">Confirm</button>
+            </div>
+            <div id="none-selected-message" class="modal-content">
+                <p><b>Warning</b></p>
+                <p>No transcriptions were selected for deletion.</p>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} Table {% endcomment %}
+    <div style="justify-items: center;">
+        <p><b>Number of transcriptions:</b> {{ total }}</p>
+        <form id="delete_results" action="{% url 'transcriber:delete_result_multi' %}" method="post">
+            {% csrf_token %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Created/Added</th>
+                        <th>
+                            <button id="initiateDeleteBtn" type="button" class="btn btn-outline-danger">Delete</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in page_obj %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'transcriber:result' query_id=item.filename %}">
+                                    {{ item }}
+                                </a>
+                            </td>
+                            <td class="timestamp">
+                                {{ item.audio_created_at|date:'Y/m/d h:i:s A e' }}
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" name="id" value="{{ item.filename }}">
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+    <div>
+{% endblock %}

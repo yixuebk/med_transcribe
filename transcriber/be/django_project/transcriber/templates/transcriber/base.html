@@ -1,0 +1,34 @@
+<!-- base.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8">
+        <script src="{% static 'third_party/bootstrap-5.3.8-dist/js/bootstrap.min.js' %}"></script>
+        <link rel="stylesheet" href="{% static 'third_party/bootstrap-5.3.8-dist/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'transcriber/main.css' %}">
+        <link rel="stylesheet" href="{% static 'transcriber/modal.css' %}">
+        <link rel="stylesheet" href="{% static 'transcriber/modal.css' %}">
+        <script src="{% static 'transcriber/modal.js' %}"></script>
+        {% block metadata %}
+        <!-- Metadata: Additional scripts/styles/etc -->
+        {% endblock %}
+        <title>{% block title %}Transcriber{% endblock %}</title>
+    </head>
+    <body>
+        {% include 'transcriber/_navbar.html' with title='Transcriber' %}
+        <main>
+            <div class="content" style="padding: 24px 24px;">
+                {% block content %}
+                <!-- Content -->
+                {% endblock %}
+            </div>
+        </main>
+        <hr>
+        <footer>
+            <!-- Footer -->
+            <p class="text-center">{% block footer %}Transcriber Project ©{% endblock %}</p>
+        </footer>
+    </body>
+</html>
