@@ -2,6 +2,7 @@
 import logging
 import os
 from openai import OpenAI
+from pydantic import BaseModel
 from pydub import AudioSegment
 from pydub.silence import detect_silence
 
@@ -14,9 +15,76 @@ logger = logging.getLogger(__name__)
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+PROMPT_TRANSCRIPTION = ''.join([
+    "You are a medical transcriber. ",
+    "You expect a transcript of a doctor-patient conversation. ",
+    "If the user provides it, please summarize the transcript into a SOAP format note. ",
+    "If it is not a valid transcript, leave the fields empty.",
+    "Use professional medical terminology. ",
+    "Use basic HTML styling. Do not wrap in extra strings or quotations. ",
+    "Translate to English if transcript is in another language.",
+])
+
+PROMPT_EDIT = ''.join([
+    "You are a medical text editing assistant. ",
+    "You will be given a SOAP format medical note and instructions on editing it. ",
+    "Update and return the SOAP format note. Use HTML formatting.",
+])
+
 CHUNK_SIZE_MB = 35      # Actual stored file size around 3 MB when set to 35
 MIN_SILENCE_LEN = 500   # Minimum silence to consider (ms)
 SILENCE_THRESH = -40    # Silence threshold (dBFS)
+
+
+class SOAPNote(BaseModel):
+    """
+    The SOAP format is as follows:
+    - Subjective: The patient's subjective medical history.
+    - Objective: The patient's objective medical history.
+    - Assessment: The patient's assessment.
+    - Plan: The patient's plan.
+    """
+    subjective: str
+    objective: str
+    assessment: str
+    plan: str
+
+
+    def __str__(self):
+        """Output as a single string."""
+        return '\n\n'.join([
+            self.subjective,
+            self.objective,
+            self.assessment,
+            self.plan
+        ])
+
+    def str_with_headers(self):
+        """Output as a single string with headers."""
+        return '\n\n'.join([
+            f'Subjective:\n{self.subjective}',
+            f'Objective:\n{self.objective}',
+            f'Assessment:\n{self.assessment}',
+            f'Plan:\n{self.plan}'
+        ])
+
+    def to_html(self):
+        """Output as a single HTML string."""
+        return '<br><br>'.join([
+            self.subjective,
+            self.objective,
+            self.assessment,
+            self.plan
+        ])
+
+    def to_html_with_headers(self):
+        """Output as a single HTML string with headers."""
+        return '<br><br>'.join([
+            f'Subjective:<br>{self.subjective}',
+            f'Objective:<br>{self.objective}',
+            f'Assessment:<br>{self.assessment}',
+            f'Plan:<br>{self.plan}',
+        ])
 
 
 def get_silence_split_points(audio, chunk_length):
@@ -131,46 +199,37 @@ def get_transcription_from_local_file(path):
 
 def get_soap_format_from_transcription(transcript):
     """Get SOAP format from transcription."""
-    # Set system prompt
-    prompt = ''.join([
-        "You are a medical transcriber. ",
-        "You are given a transcript of a doctor-patient conversation. ",
-        "Please summarize the transcript into a SOAP format note. ",
-        "Use professional medical terminology. ",
-        "Use basic HTML styling. Do not wrap in extra strings or quotations. ",
-        "Translate to English if transcript is in another language. ",
-        # "The SOAP format is as follows: ",
-        # "S - Subjective: The patient's subjective medical history. ",
-        # "O - Objective: The patient's objective medical history. ",
-        # "A - Assessment: The patient's assessment. ",
-        # "P - Plan: The patient's plan. ",
-    ])
+    # Skip in case of empty transcript
+    if not transcript.strip():
+        return SOAPNote(
+            subjective='n/a - no transcript text',
+            objective='n/a - no transcript text',
+            assessment='n/a - no transcript text',
+            plan='n/a - no transcript text'
+        ).to_html()
 
     # Get response from OpenAI API
-    response = client.chat.completions.create(
+    response = client.chat.completions.parse(
         model="gpt-4o-mini",
+        response_format=SOAPNote,
         messages=[
-            {"role": "system", "content": prompt},
+            {"role": "system", "content": PROMPT_TRANSCRIPTION},
             {"role": "user", "content": transcript},
         ]
     )
 
-    return response.choices[0].message.content
+    parsed_output = response.choices[0].message.parsed
+
+    return parsed_output.to_html_with_headers()
+
 
 def update_soap_format_with_intruction(transcription_obj, input_text):
     """Modify SOAP format with instruction."""
-    # Set system prompt
-    prompt = ''.join([
-        "You are a medical text editing assistant. ",
-        "You will be given a SOAP format medical note and instructions on editing it. ",
-        "Update and return the SOAP format note. Use HTML formatting. ",
-    ])
-
     # Get response from OpenAI API
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": prompt},
+            {"role": "system", "content": PROMPT_EDIT},
             {"role": "user", "content": transcription_obj.formatted_text + '\n' + input_text},
         ]
     )
