@@ -2,21 +2,106 @@
 import logging
 import os
 from openai import OpenAI
+from pydantic import BaseModel
 from pydub import AudioSegment
 from pydub.silence import detect_silence
+from faster_whisper import WhisperModel
 
-from django_project.settings import OPENAI_API_KEY
+from django_project.settings import OPENAI_API_KEY, LOCAL_LLM_API_PORT
+from transcriber.models import Transcription
 
 
 # Get logger
 logger = logging.getLogger(__name__)
 
 # Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
+local_client = OpenAI(
+    api_key='',
+    base_url=f'http://127.0.0.1:{LOCAL_LLM_API_PORT}/v1',
+)
+
+# OpenAI models
+OPENAI_GPT_4O_MINI_TRANSCRIBE = "gpt-4o-mini-transcribe"
+
+# Whisper model configuration
+WHISPER_LARGE_V3_TURBO = "large-v3-turbo"
+whisper_model = WhisperModel(WHISPER_LARGE_V3_TURBO, device="cpu", compute_type="int8")
+
+PROMPT_SUMMARIZATION = ''.join([
+    "You are a medical assistant for summarizing patient encounters. ",
+    "You expect a transcript of a doctor-patient conversation or related information. ",
+    "If the user provides it, please summarize the transcript into a SOAP format note. ",
+    "If it is not a valid transcript, leave the fields empty. ",
+    "If there is insufficient information, do not make up information. ",
+    "Do not make up any details not found in the transcript. ",
+    "Use professional medical terminology. ",
+    "Use basic HTML styling. Do not wrap in extra strings or quotations. ",
+    "Translate to English if transcript is in another language.",
+])
+
+PROMPT_EDIT = ''.join([
+    "You are a medical assistant for editing encounter documentation.",
+    "You will be given a SOAP format medical note and instructions on editing it. ",
+    "Update the summary according to instructions.",
+    "Use HTML styling consistent with the input, if formatting is requested. ",
+    "Do not wrap in extra strings or quotations.",
+])
 
 CHUNK_SIZE_MB = 35      # Actual stored file size around 3 MB when set to 35
 MIN_SILENCE_LEN = 500   # Minimum silence to consider (ms)
 SILENCE_THRESH = -40    # Silence threshold (dBFS)
+
+
+class SOAPNote(BaseModel):
+    """
+    The SOAP format is as follows:
+    - Subjective: The patient's subjective medical history.
+    - Objective: The patient's objective medical history.
+    - Assessment: The assessment of the patient.
+    - Plan: The plan for the patient.
+    """
+    subjective: str
+    objective: str
+    assessment: str
+    plan: str
+
+
+    def __str__(self):
+        """Output as a single string."""
+        return '\n\n'.join([
+            self.subjective,
+            self.objective,
+            self.assessment,
+            self.plan
+        ])
+
+    def str_with_headers(self):
+        """Output as a single string with headers."""
+        return '\n\n'.join([
+            f'Subjective:\n{self.subjective}',
+            f'Objective:\n{self.objective}',
+            f'Assessment:\n{self.assessment}',
+            f'Plan:\n{self.plan}'
+        ])
+
+    def to_html(self):
+        """Output as a single HTML string."""
+        return '<br><br>'.join([
+            self.subjective,
+            self.objective,
+            self.assessment,
+            self.plan
+        ])
+
+    def to_html_with_headers(self):
+        """Output as a single HTML string with headers."""
+        return '<br><br>'.join([
+            f'<b>Subjective:</b><br>{self.subjective}',
+            f'<b>Objective:</b><br>{self.objective}',
+            f'<b>Assessment:</b><br>{self.assessment}',
+            f'<b>Plan:</b><br>{self.plan}',
+        ])
 
 
 def get_silence_split_points(audio, chunk_length):
@@ -104,75 +189,119 @@ def split_mp3_to_chunks(mp3_path, chunk_size_mb):
     return chunks
 
 
-def get_transcription_from_local_file(path):
+def get_transcription_from_local_file(path: str, model_choice: str = WHISPER_LARGE_V3_TURBO):
     """Get transcription from OpenAI API."""
-    chunks = split_mp3_to_chunks(path, CHUNK_SIZE_MB)
-
     transcripts = []
-    for idx, chunk_path in enumerate(chunks):
-        logger.info("Transcribing chunk %s/%s: %s", idx + 1, len(chunks), chunk_path)
+    logger.info('transcribing with model: %s', model_choice)
 
-        # Transcribe chunk
-        with open(chunk_path, "rb") as audio_file:
-            try:
-                transcription = client.audio.transcriptions.create(
-                    model="gpt-4o-mini-transcribe",
-                    file=audio_file
-                )
-                transcripts.append(transcription.text)
-            except Exception as e:
-                logger.error("Error transcribing %s: %s", chunk_path, e)
-                transcripts.append(f"[ERROR in chunk {chunk_path}]")
-        # Remove chunk file after transcription
-        os.remove(chunk_path)
+    if WHISPER_LARGE_V3_TURBO in model_choice:
+        # Local whisper model transcription
+        logger.info('transcribing with whisper large v3 turbo')
+        segments, info = whisper_model.transcribe(path, beam_size=5)
+        logger.info(
+            "Detected language '%s' with probability %s",
+            info.language,
+            info.language_probability
+        )
+        transcripts.append(' '.join(segment.text for segment in segments))
+        logger.info('transcribed segments')
+        logger.info(segments)
+    else:
+        # Split audio into chunks
+        logger.info('transcribe with gpt')
+        chunks = split_mp3_to_chunks(path, CHUNK_SIZE_MB)
+
+        # Transcribe with OpenAI API transcription
+        for idx, chunk_path in enumerate(chunks):
+            logger.info("Transcribing chunk %s/%s: %s", idx + 1, len(chunks), chunk_path)
+
+            # Transcribe chunk
+            with open(chunk_path, "rb") as audio_file:
+                try:
+                    transcription = openai_client.audio.transcriptions.create(
+                        model="gpt-4o-mini-transcribe",
+                        file=audio_file
+                    )
+                    transcripts.append(transcription.text)
+                except Exception as e:
+                    logger.error("Error transcribing %s: %s", chunk_path, e)
+                    transcripts.append(f"[ERROR in chunk {chunk_path}]")
+
+            # Remove chunk file after transcription
+            os.remove(chunk_path)
 
     return "\n".join(transcripts)
 
 
-def get_soap_format_from_transcription(transcript):
+def get_soap_format_from_transcription(transcript: str, model_choice: str):
     """Get SOAP format from transcription."""
-    # Set system prompt
-    prompt = ''.join([
-        "You are a medical transcriber. ",
-        "You are given a transcript of a doctor-patient conversation. ",
-        "Please summarize the transcript into a SOAP format note. ",
-        "Use professional medical terminology. ",
-        "Use basic HTML styling. Do not wrap in extra strings or quotations. ",
-        "Translate to English if transcript is in another language. ",
-        # "The SOAP format is as follows: ",
-        # "S - Subjective: The patient's subjective medical history. ",
-        # "O - Objective: The patient's objective medical history. ",
-        # "A - Assessment: The patient's assessment. ",
-        # "P - Plan: The patient's plan. ",
-    ])
+    # Skip in case of empty transcript
+    if not transcript.strip():
+        return SOAPNote(
+            subjective='n/a - no transcript text',
+            objective='n/a - no transcript text',
+            assessment='n/a - no transcript text',
+            plan='n/a - no transcript text'
+        ).to_html()
 
-    # Get response from OpenAI API
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": transcript},
-        ]
-    )
+    logger.info('model_choice: %s', model_choice)
 
-    return response.choices[0].message.content
+    messages = [
+        {"role": "system", "content": PROMPT_SUMMARIZATION},
+        {"role": "user", "content": transcript},
+    ]
 
-def update_soap_format_with_intruction(transcription_obj, input_text):
+    if 'gpt' not in model_choice:
+        # Get response from local OpenAI-like API
+        response = local_client.chat.completions.parse(
+            model=model_choice,
+            response_format=SOAPNote,
+            messages=messages
+        )
+    else:
+        # Get response from OpenAI API
+        response = openai_client.chat.completions.parse(
+            model=model_choice,
+            response_format=SOAPNote,
+            messages=messages
+        )
+
+    parsed_output = response.choices[0].message.parsed
+
+    return parsed_output.to_html_with_headers()
+
+
+def update_soap_format_with_instruction(
+    transcription_obj: Transcription,
+    input_text: str,
+    model_choice: str
+):
     """Modify SOAP format with instruction."""
-    # Set system prompt
-    prompt = ''.join([
-        "You are a medical text editing assistant. ",
-        "You will be given a SOAP format medical note and instructions on editing it. ",
-        "Update and return the SOAP format note. Use HTML formatting. ",
-    ])
+    messages = [
+        {"role": "system", "content": PROMPT_EDIT},
+        {"role": "user", "content": '\n'.join([
+            'Text:',
+            transcription_obj.formatted_text,
+            'Instructions:',
+            input_text
+        ])},
+    ]
 
-    # Get response from OpenAI API
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": transcription_obj.formatted_text + '\n' + input_text},
-        ]
-    )
+    if 'gpt' not in model_choice:
+        # Get response from local OpenAI-like API
+        response = local_client.chat.completions.parse(
+            model=model_choice,
+            response_format=SOAPNote,
+            messages=messages
+        )
+    else:
+        # Get response from OpenAI API
+        response = openai_client.chat.completions.parse(
+            model=model_choice,
+            response_format=SOAPNote,
+            messages=messages
+        )
 
-    return response.choices[0].message.content
+    parsed_output = response.choices[0].message.parsed
+
+    return parsed_output.to_html_with_headers()
