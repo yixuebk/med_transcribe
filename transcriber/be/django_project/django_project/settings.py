@@ -133,8 +133,18 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Read env file JSON
-with open('.env', 'r', encoding='utf-8') as env_file:
-    env = json.loads(env_file.read())
+ENV_FILE = BASE_DIR / ".env"
+OPENAI_API_KEY = ''
+LOCAL_LLM_API_CONFIG = None
+if ENV_FILE.exists():
+    with open(ENV_FILE, "r", encoding="utf-8") as env_file:
+        # Load JSON from file
+        env = json.loads(env_file.read())
 
-# OpenAI config
-OPENAI_API_KEY = env['openai_api_key']
+        # OpenAI config
+        OPENAI_API_KEY = env.get('openai_api_key')
+
+        # Local language model API config
+        LOCAL_LLM_API_CONFIG = env.get('local_llm_api_config')
+        LOCAL_LLM_API_PORT = LOCAL_LLM_API_CONFIG.get('port')
+        LOCAL_LLM_API_MODELS = LOCAL_LLM_API_CONFIG.get('models')

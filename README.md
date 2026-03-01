@@ -29,23 +29,46 @@
         ```
 
 ## Django Application Setup
+
+### Using the bash shell script (Linux)
 1. Go to the Django project root (transcriber/be/django_project/) in a terminal.
-2. Apply server migrations (create and update database structure) and collect static files (gather user interface stuff).
+2. Add a file named '.env' in this directory, to place the API key and local model configuration. Place this config in JSON format as follows:
+    ```
+    {
+        "openai_api_key": "your_key_here",
+        "local_llm_api_config": {
+            "port": 1234,
+            "models": ["your_local_model_here"]
+        }
+    }
+    ```
+    > **Tip:** To use local language models for summarization (e.g., MedGemma), you can set up a local AI server using a tool like [LM Studio](https://lmstudio.ai/). Start the local inference server in LM Studio and update the `port` and `models` above to match your LM Studio settings.
+3. Run the init_server.sh file to run all necessary commands to set up and start the server
+    ```
+    ./init_server.sh
+    ```
+
+### Run each command manually
+1. Go to the Django project root (transcriber/be/django_project/) in a terminal.
+2. Add a file named '.env' in this directory, to place the API key and local model configuration. Place this config in JSON format as follows:
+    ```
+    {
+        "openai_api_key": "your_key_here",
+        "local_llm_api_config": {
+            "port": 1234,
+            "models": ["your_local_model_here"]
+        }
+    }
+    ```
+    > **Tip:** To use local language models for summarization (e.g., MedGemma), you can set up a local AI server using a tool like [LM Studio](https://lmstudio.ai/). Start the local inference server in LM Studio and update the `port` and `models` above to match your LM Studio settings.
+3. Apply server migrations (create and update database structure) and collect static files (gather user interface stuff).
     ```
     python manage.py migrate
     ```
     ```
     python manage.py collectstatic
     ```
-3. Add a file named '.env' in this directory, to place the API key.
-    - Place your API key in JSON format as follows:
-        ```
-        {
-            "openai_api_key": "your_key_here"
-        }
-        ```
 4. Start the local server using a terminal
     ```
     waitress-serve --host=127.0.0.1 --port=8000 django_project.wsgi:application
     ```
-
