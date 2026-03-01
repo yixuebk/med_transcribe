@@ -131,8 +131,9 @@
                 const waitMessage = ' (Stopped)';
                 document.getElementById('timerDisplay').innerHTML += waitMessage;
 
-                // Create form data
-                const formData = new FormData();
+                // Create form data (extend llm choice form)
+                const llmChoiceForm = document.querySelector('form#llm-choice-form');
+                const formData = new FormData(llmChoiceForm);
                 formData.append('file', blob, `${formattedDateTime}.mp3`);
                 formData.append('new_file', true);
                 formData.append('local_datetime', formattedDateTime);
@@ -142,7 +143,7 @@
                 textModal('Please wait for transcription to complete...');
 
                 // Send form data to server
-                fetch("{% url 'transcriber:api_transcribe' %}", {
+                fetch(llmChoiceForm.action, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': '{{ csrf_token }}',
@@ -417,6 +418,14 @@
             {% comment %} Recorder controls {% endcomment %}
             <td style="vertical-align:top;border-right:solid 1px;text-align:center;width:50%;">
                 <h2>Record New File</h2>
+                <form id="llm-choice-form" enctype="multipart/form-data" method="post" action="{% url 'transcriber:api_transcribe' %}">
+                    {% csrf_token %}
+                    {% comment %} {{ llm_choice_form }} {% endcomment %}
+                    {% for field in llm_choice_form %}
+                        {{ field.label_tag }} {{ field }}<br><br>
+                    {% endfor %}
+                </form>
+                <br>
                 <button id="startBtn" class="medium-font-size btn btn-secondary">Start Recording</button>
                 <button id="stopBtn" class="medium-font-size btn btn-secondary" disabled>Stop Recording</button>
                 <p id="timerDisplay" style="margin-top:10px;font-size:16px;color:#444;"></p>
@@ -431,7 +440,11 @@
                 <form enctype="multipart/form-data" method="post" action="{% url 'transcriber:recorder' %}">
                     {% csrf_token %}
                     {% for field in form %}
-                        <div class="rounded-bracket-borders" style="display:inline-grid;">{{ field }}</div>
+                        {% if 'File' in field.label %}
+                            <div class="rounded-bracket-borders" style="display:inline-grid;">{{ field }}</div>
+                        {% else %}
+                            {{ field.label_tag }} {{ field }}<br><br>
+                        {% endif %}
                     {% endfor %}
                     <br><br>
                     <input id="local_datetime" name="local_datetime" type="hidden" value="">
@@ -508,6 +521,7 @@
                         <span class="material-symbols-outlined">
                             stop_circle
                         </span>
+                        Stop
                     </button>
                     <button class="medium-font-size btn btn-secondary" form="edit_chat" type="submit" value="reformat" name="reformat_chat" style="display:inline-flex;align-items:center;flex-direction:column;">
                         <span class="material-symbols-outlined">
@@ -569,7 +583,7 @@
                             </span>
                             Voice
                         </button>
-                        <button id="voiceChatStopBtn" class="medium-font-size btn btn-secondary" style="display:inline-flex;align-items:center;flex-direction:column;">
+                        <button id="voiceChatStopBtn" class="medium-font-size btn btn-secondary" style="display:none;align-items:center;flex-direction:column;">
                             <span class="material-symbols-outlined">
                                 stop_circle
                             </span>

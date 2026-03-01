@@ -4,7 +4,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from transcriber.models import Transcription
-from transcriber.forms import BasicAudioFileUploadForm, EditTranscriptForm
+from transcriber.forms import TranscribeAndSummarizeAudioFileForm, EditTranscriptForm
 
 
 class RecorderViewTest(TestCase):
@@ -39,7 +39,7 @@ class RecorderViewTest(TestCase):
         self.assertTemplateUsed(response, 'transcriber/recorder.html')
 
         # Check context
-        self.assertIsInstance(response.context['form'], BasicAudioFileUploadForm)
+        self.assertIsInstance(response.context['form'], TranscribeAndSummarizeAudioFileForm)
         self.assertIsNone(response.context['transcription'])
         self.assertIsNone(response.context['edit_original_transcript_form'])
         self.assertIsNone(response.context['edit_modified_transcript_form'])
@@ -234,7 +234,7 @@ class RecorderViewTest(TestCase):
         self.assertTemplateUsed(response, 'transcriber/recorder.html')
 
         # Check context is properly initialized
-        self.assertIsInstance(response.context['form'], BasicAudioFileUploadForm)
+        self.assertIsInstance(response.context['form'], TranscribeAndSummarizeAudioFileForm)
         self.assertIsNone(response.context['transcription'])
         self.assertIsNone(response.context['edit_original_transcript_form'])
         self.assertIsNone(response.context['edit_modified_transcript_form'])

@@ -16,15 +16,17 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .models import Transcription
 
 from .forms import (
-    BasicAudioFileUploadForm,
+    TranscriptionAndSummarizationLanguageModelChoiceForm,
+    BasicAudioFileForm,
+    TranscribeAndSummarizeAudioFileForm,
     EditTranscriptForm,
-    TextInputForm,
+    EditWithInstructionForm,
     RichTextInputForm,
 )
 from .gpt_transcription import (
     get_transcription_from_local_file,
     get_soap_format_from_transcription,
-    update_soap_format_with_intruction,
+    update_soap_format_with_instruction,
 )
 
 # Get logger
@@ -37,7 +39,8 @@ MEDIA_AUDIO_DIR = 'transcriber/media/audio/'
 def recorder(request):
     """Recorder view containing audio recording, downloading, and transcribing features."""
     context = {
-        'form': BasicAudioFileUploadForm(),
+        'form': TranscribeAndSummarizeAudioFileForm(),
+        'llm_choice_form': TranscriptionAndSummarizationLanguageModelChoiceForm(),
         'transcription': None,
         'edit_original_transcript_form': None,
         'edit_modified_transcript_form': None,
@@ -45,14 +48,14 @@ def recorder(request):
         'empty_edit_form': EditTranscriptForm(),
         # Forms for editing reformatted text
         'edit_soap_form': RichTextInputForm(),
-        'edit_chat_form': TextInputForm(),
+        'edit_chat_form': EditWithInstructionForm(),
     }
 
     if request.method == 'POST':
         # If file is uploaded (audio file)
         if request.FILES:
             # Load form data
-            form = BasicAudioFileUploadForm(request.POST, request.FILES)
+            form = TranscribeAndSummarizeAudioFileForm(request.POST, request.FILES)
 
             # Check if form is valid
             if form.is_valid():
@@ -106,7 +109,7 @@ def result(request, query_id):
         'edit_modified_transcript_form': None,
         # Forms for editing reformatted text
         'edit_soap_form': RichTextInputForm(),
-        'edit_chat_form': TextInputForm(),
+        'edit_chat_form': EditWithInstructionForm(),
     }
 
     try:
@@ -198,7 +201,6 @@ def delete_result(request, query_id):
 def delete_result_multi(request):
     """Delete multiple transcription results."""
     if request.method == 'POST':
-        print(request.POST)
         # Get selected transcription IDs from request
         list_query_id = request.POST.getlist('id')
 
@@ -230,13 +232,13 @@ def delete_result_multi(request):
 # JsonResponse API ---------------------------------------------------------------------------------
 
 def api_transcribe(request):
-    """Transcribe audio file using OpenAI API"""
+    """Transcribe audio file using language model."""
     context = {}
 
     # Check if request is POST
     if request.method == 'POST' and request.FILES:
         # Load form data
-        form = BasicAudioFileUploadForm(request.POST, request.FILES)
+        form = TranscribeAndSummarizeAudioFileForm(request.POST, request.FILES)
 
         # Check if form is valid
         if form.is_valid():
@@ -310,15 +312,17 @@ def api_update_soap(request):
                 return HttpResponse(status=404, content='Invalid SOAP note edit form')
         # Handle form - edit with language model 'chat'
         elif 'edit_chat' in request.POST:
-            form = TextInputForm(request.POST)
+            form = EditWithInstructionForm(request.POST)
 
             # Check if form is valid
             if form.is_valid():
                 logger.info('Handling SOAP note edit with LLM instruction.')
 
                 # Update SOAP note with LLM instruction
-                transcription.formatted_text = update_soap_format_with_intruction(
-                    transcription, form.cleaned_data['input']
+                transcription.formatted_text = update_soap_format_with_instruction(
+                    transcription,
+                    form.cleaned_data['input'],
+                    form.cleaned_data['summarizer_model']
                 )
                 transcription.save()
             else:
@@ -335,13 +339,13 @@ def api_update_soap(request):
 
 
 def api_basic_transcribe(request):
-    """Transcribe audio file using OpenAI API."""
+    """Transcribe audio file using language model."""
     context = {}
 
     # Check if request is POST
     if request.method == 'POST' and request.FILES:
         # Load form data
-        form = BasicAudioFileUploadForm(request.POST, request.FILES)
+        form = BasicAudioFileForm(request.POST, request.FILES)
         # Check if form is valid
         if form.is_valid():
             # Save edit instruction voice audio file
@@ -350,7 +354,7 @@ def api_basic_transcribe(request):
                 for chunk in form.cleaned_data['file'].chunks():
                     destination.write(chunk)
 
-            logger.info('Transcribe audio file using OpenAI API.')
+            logger.info('Basic audio transcription.')
             transcript = get_transcription_from_local_file(f'{MEDIA_AUDIO_DIR}{file_name}')
 
             context['transcript'] = transcript
@@ -361,7 +365,7 @@ def api_basic_transcribe(request):
 
 # Component functions ------------------------------------------------------------------------------
 
-def handle_existing_file_transcription(request_file, tz):
+def handle_existing_file_transcription(request_file, tz, transcriber_model, summarizer_model):
     """Handle existing file transcription."""
     # Set file name
     str_split = request_file.name.split('.')
@@ -385,10 +389,11 @@ def handle_existing_file_transcription(request_file, tz):
 
     # Get transcript
     transcript_result = get_transcription_from_local_file(
-        f'{MEDIA_AUDIO_DIR}{file_name}'
+        f'{MEDIA_AUDIO_DIR}{file_name}',
+        transcriber_model
     )
     # Get SOAP format
-    soap_format_result = get_soap_format_from_transcription(transcript_result)
+    soap_format_result = get_soap_format_from_transcription(transcript_result, summarizer_model)
 
     # Check there is a datetime substring (14 digits, YYYYMMDDHHMMSS)
     possible_datetime_string = file_name.split('_', maxsplit=1)[0]
@@ -418,7 +423,7 @@ def handle_existing_file_transcription(request_file, tz):
 
     return transcription
 
-def handle_new_file_transcription(request_file):
+def handle_new_file_transcription(request_file, transcriber_model, summarizer_model):
     """Handle new file transcription."""
     # Get timestamp
     timestamp_str = timezone.now().strftime('%Y%m%d%H%M%S')
@@ -431,10 +436,11 @@ def handle_new_file_transcription(request_file):
 
     # Get transcript
     transcript_result = get_transcription_from_local_file(
-        f'{MEDIA_AUDIO_DIR}{file_name}'
+        f'{MEDIA_AUDIO_DIR}{file_name}',
+        transcriber_model
     )
     # Get SOAP format
-    soap_format_result = get_soap_format_from_transcription(transcript_result)
+    soap_format_result = get_soap_format_from_transcription(transcript_result, summarizer_model)
 
     # Save the object to database
     transcription = Transcription(
@@ -452,6 +458,10 @@ def handle_audio_file_upload(request_obj, form_obj, context_dict):
     """Handle valid audio file upload."""
     # Get file from form cleaned data
     request_file = form_obj.cleaned_data['file']
+    transcriber_model = form_obj.cleaned_data['transcriber_model']
+    summarizer_model = form_obj.cleaned_data['summarizer_model']
+
+    logger.info('Selected language model: %s.', transcriber_model)
 
     transcription = None
 
@@ -463,10 +473,19 @@ def handle_audio_file_upload(request_obj, form_obj, context_dict):
 
     # For file upload skipping the recording step
     if 'existing_file' in request_obj.POST:
-        transcription = handle_existing_file_transcription(request_file, tz)
+        transcription = handle_existing_file_transcription(
+            request_file,
+            tz,
+            transcriber_model,
+            summarizer_model
+        )
     elif 'new_file' in request_obj.POST:
         # Save Transcription object
-        transcription = handle_new_file_transcription(request_file)
+        transcription = handle_new_file_transcription(
+            request_file,
+            transcriber_model,
+            summarizer_model
+        )
 
     # Add to existing page context to display in the same page
     context_dict['transcription'] = transcription
@@ -495,6 +514,7 @@ def handle_reformat_original_transcript(form_obj, context_dict):
         filename=form_obj.cleaned_data['filename']
     )
 
+    summarizer_model = form_obj.cleaned_data['summarizer_model']
     # Save edited transcript if different from original
     if form_obj.cleaned_data['transcript'] != transcription.transcript:
         transcription.edited_transcript = form_obj.cleaned_data['transcript']
@@ -508,7 +528,10 @@ def handle_reformat_original_transcript(form_obj, context_dict):
         )
 
         # Get new soap format
-        soap_format_result = get_soap_format_from_transcription(transcription.edited_transcript)
+        soap_format_result = get_soap_format_from_transcription(
+            transcription.edited_transcript,
+            summarizer_model
+        )
     else:
         # If no changes, show original transcript
         context_dict['edit_original_transcript_form'] = EditTranscriptForm(
@@ -519,7 +542,10 @@ def handle_reformat_original_transcript(form_obj, context_dict):
         )
 
         # Get new soap format
-        soap_format_result = get_soap_format_from_transcription(transcription.transcript)
+        soap_format_result = get_soap_format_from_transcription(
+            transcription.transcript,
+            summarizer_model
+        )
     transcription.formatted_text = soap_format_result
 
     # Save changes
@@ -550,7 +576,11 @@ def handle_reformat_edited_transcript(form_obj, context_dict):
     )
 
     # Get new soap format
-    soap_format_result = get_soap_format_from_transcription(transcription.edited_transcript)
+    summarizer_model = form_obj.cleaned_data['summarizer_model']
+    soap_format_result = get_soap_format_from_transcription(
+        transcription.edited_transcript,
+        summarizer_model
+    )
     transcription.formatted_text = soap_format_result
 
     # Save changes
