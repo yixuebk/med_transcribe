@@ -1,0 +1,11 @@
+Subjective:
+Patient presents with progressive fatigue over the past couple of months, described as constant tiredness ('wading through mud') impacting daily activities like getting out of bed and climbing stairs. Patient reports occasional dizziness upon standing quickly and cold extremities (hands and feet). Appetite has decreased, and patient believes they have lost some weight, though not weighed recently. Patient denies significant medical history beyond appendectomy. Takes only a daily multivitamin. Family history includes maternal hypothyroidism and paternal grandmother with iron deficiency anemia. Diet consists mainly of cereal/toast for breakfast, salad for lunch, and simple meals like pasta or chicken for dinner; patient admits to limited intake of red meat and beans.
+
+Objective:
+Vital signs: Blood pressure slightly low (details not specified), pulse, respiration, and abdominal palpation were within normal limits during the physical exam. No overt signs of infection or inflammation noted on examination.
+
+Assessment:
+The patient's symptoms of profound fatigue, dizziness upon standing, cold extremities, decreased appetite, and weight loss are concerning for potential anemia, possibly iron deficiency anemia given her diet and family history. Hypothyroidism is also a consideration due to the family history, although less likely as the primary cause based solely on these symptoms. Further investigation is warranted.
+
+Plan:
+Order blood tests: Complete Blood Count (CBC) to assess red blood cell levels; Iron Panel to evaluate iron stores; Thyroid-Stimulating Hormone (TSH) test to evaluate thyroid function; Basic Metabolic Panel (BMP) for kidney and electrolyte assessment. Results are expected within 24-48 hours for CBC, potentially up to a week for iron panel and TSH. Follow up will be based on results. If anemia is confirmed, discuss treatment options including iron supplementation and dietary counseling. Further investigation into the cause of potential iron deficiency (e.g., occult bleeding) may be considered if needed. Advised patient to prioritize rest and hydration.

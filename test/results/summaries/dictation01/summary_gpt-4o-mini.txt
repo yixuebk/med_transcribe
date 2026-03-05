@@ -1,0 +1,11 @@
+Subjective:
+The patient, a 58-year-old female, reports intermittent substernal chest pressure for the past two days. She describes the pain as a squeezing sensation, rated 6 out of 10, lasting approximately 10 to 15 minutes per episode. The discomfort is triggered by exertion and relieved with rest. She denies pain radiation to the arm, jaw, or back, and also denies nausea, vomiting, diaphoresis, or syncope. She endorses mild shortness of breath with exertion.
+
+Objective:
+Vital signs: BP 148/86, HR 84, RR 16, O2 saturation 98% on room air, Temperature 98.6°F. Physical examination shows the patient is alert and in no acute distress. Cardiovascular exam reveals a regular rate and rhythm with no murmurs, rubs, or gallops. Respiratory exam indicates clear lungs bilaterally. Extremities have no edema. Diagnostic data: ECG shows normal sinus rhythm without acute ST segment changes, initial troponin is negative, chest x-ray displays no acute cardiopulmonary process, and basic labs show mildly elevated glucose.
+
+Assessment:
+58-year-old female with cardiovascular risk factors, presenting with exertional chest pain concerning for stable angina. Acute coronary syndrome is less likely at this time based on negative initial workup, but has not been completely ruled out.
+
+Plan:
+Admit to observation for serial troponins and cardiac monitoring. Continue aspirin therapy. Optimize blood pressure and glycemic control. Arrange for stress testing if serial enzymes remain negative.

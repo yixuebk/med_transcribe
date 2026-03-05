@@ -1,0 +1,11 @@
+Subjective:
+77 year old female presenting with progressive dyspnea, lower extremity edema, orthopnea, and paroxysmal nocturnal dyspnea. Reports worsening shortness of breath over the past five days, bilateral lower extremity swelling (to mid-shin), and weight gain of 4.5 kg in one week. Denies chest pain, palpitations, syncope, fever, productive cough, or recent travel.
+
+Objective:
+Vital Signs: BP 168/92 mmHg, HR 112 bpm irregularly irregular, RR 22 breaths per minute, SpO2 90% on room air, Temperature 36.8°C. Physical Exam: Elderly female in mild respiratory distress, JVD (12 cm), tachycardic irregularly irregular rhythm with S3 gallop, bibasilar crackles, bilateral dullness to percussion, abdomen soft and mildly distended, positive hepatojugular reflux, 2+ pitting edema to mid-tibia bilaterally. Neurologically alert and oriented x3x3. Electrocardiogram: Atrial fibrillation with rapid ventricular response (115 bpm), no acute ST segment elevations. Chest Radiograph: Cardiomegaly with bilateral interstitial edema and small pleural effusions. Laboratory Data: BNP 1240 pg/mL, High Sensitivity Troponin 28 ng/L, Creatinine 1.9 mg/dL, BUN 42 mg/dL, Sodium 131 mEq/L, Potassium 4.8 mEq/L, Hemoglobin 11.2 g/dL.
+
+Assessment:
+77 year old female with known heart failure with reduced ejection fraction presenting with acute decompensated congestive heart failure likely precipitated by uncontrolled hypertension and atrial fibrillation with rapid ventricular response. Evidence of volume overload with pulmonary edema, elevated BNP, worsening renal function consistent with cardiorenal syndrome.
+
+Plan:
+Admit to telemetry. Initiate intravenous furosemide 80 mg with close monitoring of urine output and daily weights. Begin rate control with intravenous diltiazem infusion titrated to heart rate less than 100 bpm. Fluid restriction to 1.5 liters per day and sodium restriction to less than 2 grams daily. Cardiology consultation requested for further management and optimization of guideline-directed medical therapy.

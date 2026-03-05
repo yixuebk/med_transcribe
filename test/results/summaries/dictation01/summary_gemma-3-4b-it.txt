@@ -1,0 +1,11 @@
+Subjective:
+58-year-old female presenting today for evaluation of chest discomfort. Patient reports intermittent substernal chest pressure for the past two days, described as a squeezing sensation (6/10) lasting 10-15 minutes, precipitated by exertion and relieved with rest. Denies radiation to arm, jaw, or back; denies nausea, vomiting, diaphoresis, or syncope. Reports mild shortness of breath with exertion. Past medical history includes hypertension and type 2 diabetes mellitus. Medications: Metformin 1000mg twice daily, Lisinopril 20mg daily. Allergies: No known drug allergies.
+
+Objective:
+Vital Signs: BP 148/86, HR 84, RR 16, SpO2 98% on room air, Temperature 98.6°F. General: Alert and in no acute distress. Cardiovascular: Regular rate and rhythm, no murmurs, rubs, or gallops. Respiratory: Lungs clear to auscultation bilaterally. Extremities: No edema. Diagnostic Data: Electrocardiogram - Normal sinus rhythm without acute ST segment changes. Initial Troponin - Negative. Chest X-ray - No acute cardiopulmonary process. Labs: Glucose mildly elevated.
+
+Assessment:
+58-year-old female with cardiovascular risk factors presenting with exertional chest pain concerning for stable angina. Acute coronary syndrome, less likely at this time given negative initial workup. However, it has not been ruled out.
+
+Plan:
+Admit to observation for serial troponins and cardiac monitoring. Continue aspirin therapy. Optimize blood pressure and glycemic control. Arrange stress testing if serial enzymes remain negative.

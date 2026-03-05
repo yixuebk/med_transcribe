@@ -1,0 +1,11 @@
+Subjective:
+Patient reports intermittent substernal chest pressure exacerbated by exertion (climbing stairs, brisk walking) and occasionally at rest, radiating to the left shoulder and jaw, lasting 5-10 minutes and relieved by rest or sublingual nitroglycerin. Associated symptoms include dyspnea on exertion, diaphoresis, mild nausea, and twice experienced near syncope. Reports orthopnea (needing two pillows to sleep) and paroxysmal nocturnal dyspnea (awakening gasping for air). Also reports bilateral ankle swelling with sock indentation marks and 8 pounds of weight gain over two months.
+
+Objective:
+Vitals: BP 152/94, HR 92 bpm (irregular), Physical Exam: Possible S3 gallop, soft systolic murmur at the apex, bibasilar crackles, 1+ pitting edema bilaterally. Labs: Hemoglobin A1C 8.2% (repeat ordered). ECG shows irregular heart rate and possible S3 gallop.
+
+Assessment:
+The patient presents with symptoms suggestive of angina pectoris and myocardial ischemia, complicated by potential congestive heart failure. Risk factors include long-standing hypertension, type 2 diabetes mellitus (A1C 8.2%), hyperlipidemia, prior tobacco use (25 pack years), family history of MI and HF (father and brother). Possible obstructive coronary artery disease with ischemic cardiomyopathy and early congestive heart failure is suspected.
+
+Plan:
+1. Order: 12-lead ECG, Lipid Panel, Comprehensive Metabolic Panel, BNP, Repeat Hemoglobin A1C, Transthoracic Echocardiogram, Stress Test (potentially with nuclear imaging). 2. Initiate guideline-directed medical therapy including ACE inhibitor or ARNI (if systolic dysfunction confirmed), beta blocker, loop diuretic for volume overload, high-intensity statin, and consider SGLT2 inhibitor. 3. Sodium restriction (<2g/day) and daily weight monitoring. 4. Patient instructed to seek emergent care for chest pain lasting >15 minutes, unrelieved by rest or nitroglycerin, with severe dyspnea or diaphoresis. Consider coronary angiography depending on stress test and echocardiogram results.

@@ -1,0 +1,39 @@
+Date: March 3, 2026.
+Patient name: Michael Johnson.
+Date of birth: September 8, 1985.
+Medical record number: 774219.
+
+This is a 40-year-old male presenting to the clinic today with complaints of lower back pain.
+
+History of Present Illness:
+The patient reports acute onset of lower back pain three days ago after lifting a heavy box while moving furniture. He describes the pain as sharp and localized to the right lower lumbar region. Pain is rated 7 out of 10 and worsens with bending and prolonged sitting. He denies radiation down the legs, numbness, tingling, weakness, bowel or bladder incontinence, or saddle anesthesia. He has tried over-the-counter ibuprofen with partial relief.
+
+Past Medical History:
+No chronic medical conditions reported.
+
+Past Surgical History:
+Appendectomy in 2010.
+
+Medications:
+Ibuprofen as needed.
+
+Allergies:
+No known drug allergies.
+
+Review of Systems:
+Negative for fever, weight loss, recent trauma beyond stated injury, or neurologic deficits.
+
+Physical Examination:
+Vital signs: Blood pressure 126 over 78, heart rate 72, respiratory rate 14, temperature 98.4 degrees Fahrenheit.
+General: Patient appears mildly uncomfortable but in no acute distress.
+Back: Tenderness to palpation over the right lumbar paraspinal muscles. No midline spinal tenderness.
+Neurologic: Strength 5 out of 5 in bilateral lower extremities. Sensation intact. Reflexes 2 plus and symmetric. Negative straight leg raise bilaterally.
+Gait: Normal.
+
+Assessment:
+Forty-year-old male with acute mechanical low back strain without red flag symptoms.
+
+Plan:
+Recommend conservative management including rest, activity modification, nonsteroidal anti-inflammatory drugs as needed, and initiation of physical therapy exercises. Advised patient on proper lifting techniques. Return precautions discussed, including worsening pain, development of neurologic symptoms, or bowel or bladder dysfunction. Follow-up in two weeks if not improving.
+
+End dictation.

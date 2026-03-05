@@ -1,0 +1,11 @@
+Subjective:
+Patient reports intermittent substernal chest discomfort radiating to the left shoulder and jaw, triggered by exertion and occasionally at rest, lasting 5-10 minutes with relief on rest or nitroglycerin. Associated symptoms include dyspnea on exertion, diaphoresis, mild nausea, and presyncope (twice). Patient also reports orthopnea (needing two pillows to sleep) and paroxysmal nocturnal dyspnea (awakening gasping for air). Bilateral ankle swelling with sock indentation marks and 8 lbs weight gain over two months. Patient has a history of hypertension, type 2 diabetes mellitus (HbA1c 8.2%), hyperlipidemia, prior tobacco use (25 pack years), family history of father's myocardial infarction at age 62 and heart failure, and brother's coronary stent placement.
+
+Objective:
+Blood pressure: 152/94 mmHg; Heart rate: 92 bpm with irregular rhythm. Auscultation reveals a possible S3 gallop and soft systolic murmur at the apex. Bibasilar crackles present bilaterally. 1+ pitting edema in both ankles. ECG shows possible signs of ischemia or arrhythmias.
+
+Assessment:
+Patient presents with symptoms suggestive of angina pectoris, likely secondary to obstructive coronary artery disease (CAD) with possible ischemic cardiomyopathy and early congestive heart failure. Risk factors include hypertension, diabetes mellitus, hyperlipidemia, prior tobacco use, and family history of CAD and heart failure. The patient's symptoms and examination findings raise concern for significant cardiac ischemia.
+
+Plan:
+Order 12-lead ECG, lipid panel, comprehensive metabolic panel, BNP, repeat HbA1c, and transthoracic echocardiogram. Consider stress test with nuclear imaging given intermediate to high pretest probability of CAD. Optimize guideline-directed medical therapy including up-titrating ACE inhibitor or transitioning to an angiotensin receptor neprolysin inhibitor if systolic dysfunction is confirmed, initiating a beta blocker, adding a loop diuretic for symptomatic volume overload, ensuring high-intensity statin use and considering SGLT2 inhibitor given diabetes and potential heart failure. Strict sodium restriction (under 2 grams/day) with daily weight monitoring. Patient instructed to seek emergent care for chest pain lasting more than 15 minutes unrelieved by rest or nitroglycerin, especially if accompanied by severe dyspnea or diaphoresis.

@@ -1,0 +1,62 @@
+Date: March 3, 2026.
+Patient Name: Eleanor Davis.
+Date of Birth: January 22, 1949.
+Medical Record Number: 662481.
+
+This is a 77-year-old female presenting to the emergency department with progressive dyspnea and lower extremity edema.
+
+History of Present Illness:
+The patient reports worsening shortness of breath over the past five days. Dyspnea initially occurred with moderate exertion but has progressed to occurring at rest. She endorses orthopnea requiring three pillows and paroxysmal nocturnal dyspnea occurring nightly for the past three evenings. She reports bilateral lower extremity swelling extending to the mid-shin and a weight gain of approximately 4.5 kilograms over one week. She denies chest pain, palpitations, syncope, fever, productive cough, or recent travel.
+
+Past Medical History:
+Chronic systolic heart failure with reduced ejection fraction, last documented left ventricular ejection fraction 35 percent.
+Persistent atrial fibrillation.
+Hypertension.
+Chronic kidney disease stage 3b.
+
+Medications:
+Furosemide 40 mg daily.
+Metoprolol succinate 100 mg daily.
+Lisinopril 10 mg daily.
+Apixaban 5 mg twice daily.
+
+Allergies:
+No known drug allergies.
+
+Review of Systems:
+Positive for fatigue and decreased exercise tolerance. Negative for hemoptysis, pleuritic chest pain, abdominal pain, or urinary changes.
+
+Physical Examination:
+Vital signs: Blood pressure 168 over 92 mmHg, heart rate 112 beats per minute and irregularly irregular, respiratory rate 22 breaths per minute, oxygen saturation 90 percent on room air, temperature 36.8 degrees Celsius.
+General: Elderly female in mild respiratory distress, speaking in full sentences.
+Neck: Jugular venous distention approximately 12 centimeters above the sternal angle at 45 degrees.
+Cardiovascular: Tachycardic, irregularly irregular rhythm. S1 and S2 present. S3 gallop appreciated. No murmurs.
+Respiratory: Bibasilar crackles extending to the mid-lung fields bilaterally. Dullness to percussion at bilateral bases.
+Abdomen: Soft, mildly distended, positive hepatojugular reflux.
+Extremities: 2+ pitting edema to mid-tibia bilaterally.
+Neurologic: Alert and oriented times three. No focal deficits.
+
+Diagnostic Data:
+Electrocardiogram demonstrates atrial fibrillation with rapid ventricular response at 115 beats per minute, no acute ST-segment elevations.
+Chest radiograph reveals cardiomegaly with bilateral interstitial edema and small pleural effusions.
+Laboratory data:
+BNP 1,240 picograms per milliliter.
+High-sensitivity troponin mildly elevated at 28 nanograms per liter, stable on repeat measurement.
+Serum creatinine 1.9 milligrams per deciliter, baseline 1.6.
+BUN 42 milligrams per deciliter.
+Sodium 131 millimoles per liter.
+Potassium 4.8 millimoles per liter.
+Hemoglobin 11.2 grams per deciliter.
+
+Assessment:
+Seventy-seven-year-old female with known heart failure with reduced ejection fraction presenting with acute decompensated congestive heart failure, likely precipitated by uncontrolled hypertension and atrial fibrillation with rapid ventricular response. Evidence of volume overload with pulmonary edema, elevated BNP, worsening renal function consistent with cardiorenal syndrome.
+
+Plan:
+Admit to telemetry.
+Initiate intravenous furosemide 80 mg with close monitoring of urine output and daily weights.
+Begin rate control with intravenous diltiazem infusion, titrated to heart rate less than 100 beats per minute.
+Fluid restriction to 1.5 liters per day and sodium restriction to less than 2 grams daily.
+Trend renal function, electrolytes, and serial troponins.
+Cardiology consultation requested for further management and optimization of guideline-directed medical therapy.
+
+End dictation.

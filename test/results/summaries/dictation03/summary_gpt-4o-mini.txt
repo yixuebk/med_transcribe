@@ -1,0 +1,11 @@
+Subjective:
+The patient reports worsening shortness of breath over the past five days, progressing from moderate exertion to rest. She endorses orthopnea requiring three pillows and paroxysmal nocturnal dyspnea occurring nightly for the past three evenings. Reports bilateral lower extremity swelling extending to mid-shin and a weight gain of approximately 4.5 kg over one week. Denies chest pain, palpitations, syncope, fever, productive cough or recent travel. Positive for fatigue and decreased exercise tolerance, negative for hemoptysis, pleuritic chest pain, abdominal pain or urinary changes.
+
+Objective:
+Vital signs: BP 168/92 mmHg, HR 112 bpm irregularly irregular, RR 22 breaths/min, O2 Sat 90% on room air, Temp 36.8°C. Physical exam shows an elderly female in mild respiratory distress, neck JVD at 12 cm above sternal angle at 45 degrees, tachycardic with irregular rhythm, S1 and S2 present with S3 gallop, bibasilar crackles, dullness to percussion at bilateral bases, abdomen soft and mildly distended, positive hepatojugular reflux, 2+ pitting edema to mid-tibia bilaterally. ECG: atrial fibrillation with rapid ventricular response (HR 115 bpm), chest radiograph: cardiomegaly with bilateral interstitial edema and small pleural effusions. Labs: BNP 1240 pg/mL, troponin mildly elevated at 28 ng/L, Cr 1.9 mg/dL (baseline 1.6), BUN 42 mg/dL, Na 131 mmol/L, K 4.8 mmol/L, Hb 11.2 g/dL.
+
+Assessment:
+77 year old female with known heart failure with reduced ejection fraction presenting with acute decompensated congestive heart failure likely precipitated by uncontrolled hypertension and atrial fibrillation with rapid ventricular response. Evidence of volume overload with pulmonary edema, elevated BNP, and worsening renal function consistent with cardiorenal syndrome.
+
+Plan:
+Admit to telemetry, initiate IV furosemide 80 mg with close monitoring of urine output and daily weights. Begin rate control with IV diltiazem infusion titrated to HR <100 bpm. Implement fluid restriction to 1.5 L/day and sodium restriction to <2 g/day. Trend renal function, electrolytes, and serial troponins. Cardiology consultation requested for further management and optimization of guideline-directed medical therapy.
