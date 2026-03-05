@@ -1,0 +1,11 @@
+Subjective:
+Patient reports experiencing severe fatigue for the last couple of months, feeling progressively worse over time. Initially attributed to work stress, fatigue is now constant with some variation in severity. Describes fatigue as feeling like "wading through mud," making simple tasks feel difficult. Reports occasional dizziness when standing up quickly and coldness in hands and feet. There has been a decrease in appetite and some weight loss, although the patient has not weighed themselves recently.
+
+Objective:
+Physical examination reveals slightly low blood pressure but otherwise normal findings. Vital signs taken during the examination. No significant abnormalities detected during heart, lung, and abdominal assessments.
+
+Assessment:
+Symptoms of fatigue, dizziness, and cold extremities raise concerns for possible anemia, particularly iron deficiency, as well as potential thyroid issues given family history. The nature of the diet lacks sufficient iron-rich foods, which may contribute to symptoms.
+
+Plan:
+Order blood tests including: Complete Blood Count (CBC), iron panel, Thyroid-Stimulating Hormone (TSH) test, and basic metabolic panel. Await test results to assess red blood cell levels, iron stores, and thyroid function. Discuss potential treatment options if anemia is confirmed, which may involve iron supplementation and dietary changes. Advise patient to prioritize rest and hydration while awaiting results.

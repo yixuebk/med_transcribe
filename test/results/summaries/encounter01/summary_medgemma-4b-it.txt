@@ -1,0 +1,11 @@
+Subjective:
+Patient presents with progressive fatigue over the past few months, described as constant tiredness with some fluctuation in severity. Patient reports dizziness upon standing, cold extremities (hands and feet), decreased appetite, and weight loss. Family history includes hypothyroidism (mother) and iron deficiency anemia (grandmother). Diet consists of cereal/toast for breakfast, salad for lunch, and simple dinners (pasta, chicken).
+
+Objective:
+Vital signs: Slightly low blood pressure. Cardiovascular and respiratory exam unremarkable. Abdominal exam normal. Physical exam findings suggestive of possible anemia due to fatigue, dizziness, and cold extremities.
+
+Assessment:
+Possible anemia, potentially iron deficiency or thyroid dysfunction. Further investigation required to differentiate between these possibilities.
+
+Plan:
+Order CBC, iron panel, TSH, and basic metabolic panel. Call patient with results as soon as available. If anemia is confirmed, discuss treatment options (iron supplements, dietary changes). Consider further investigation for underlying cause of iron deficiency if necessary.

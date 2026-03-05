@@ -1,0 +1,39 @@
+Date: March 3, 2026.
+Patient name: Jane Smith.
+Date of birth: April 12, 1967.
+Medical record number: 458732.
+
+This is a 58-year-old female presenting today for evaluation of chest discomfort.
+
+History of Present Illness:
+The patient reports intermittent substernal chest pressure for the past two days. She describes the pain as a squeezing sensation, rated 6 out of 10, lasting approximately 10 to 15 minutes per episode. The discomfort is precipitated by exertion and relieved with rest. She denies radiation of pain to the arm, jaw, or back. She denies nausea, vomiting, diaphoresis, or syncope. She does endorse mild shortness of breath with exertion.
+
+Past Medical History:
+Hypertension and type 2 diabetes mellitus.
+
+Medications:
+Metformin 1000 mg twice daily. Lisinopril 20 mg daily.
+
+Allergies:
+No known drug allergies.
+
+Review of Systems:
+Otherwise negative except as noted in the history of present illness.
+
+Physical Examination:
+Vital signs: Blood pressure 148 over 86, heart rate 84, respiratory rate 16, oxygen saturation 98 percent on room air, temperature 98.6 degrees Fahrenheit.
+General: Patient is alert and in no acute distress.
+Cardiovascular: Regular rate and rhythm. No murmurs, rubs, or gallops.
+Respiratory: Lungs clear to auscultation bilaterally.
+Extremities: No edema.
+
+Diagnostic Data:
+Electrocardiogram shows normal sinus rhythm without acute ST-segment changes. Initial troponin is negative. Chest X-ray demonstrates no acute cardiopulmonary process. Basic labs are within normal limits aside from mildly elevated glucose.
+
+Assessment:
+Fifty-eight-year-old female with cardiovascular risk factors presenting with exertional chest pain concerning for stable angina. Acute coronary syndrome less likely at this time given negative initial workup; however, it has not been ruled out.
+
+Plan:
+Admit to observation for serial troponins and cardiac monitoring. Continue aspirin therapy. Optimize blood pressure and glycemic control. Arrange stress testing if serial enzymes remain negative.
+
+End dictation.

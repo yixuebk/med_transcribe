@@ -1,0 +1,11 @@
+Subjective:
+Patient presents with persistent fatigue, dizziness, and cold extremities.
+
+Objective:
+{‘pulse’: ‘slightly low’, ‘blood pressure’: ‘slightly low’, ‘respiratory rate’: ‘normal’, ‘abdominal exam’: ‘normal’}
+
+Assessment:
+Differential diagnosis includes anemia (potentially iron deficiency), hypothyroidism, and possible underlying infection/inflammation. Fatigue with dizziness and cold extremities raises concern for anemia given patient's reported symptoms and dietary history.
+
+Plan:
+Ordered CBC, iron panel, TSH test, and basic metabolic panel. Will also order markers for infection or inflammation. Patient educated on potential diagnoses and treatment options if anemia is confirmed (iron supplements, dietary changes, further investigation for bleeding). Instructed to prioritize rest and hydration. Results will be communicated upon availability (CBC - 24-48 hours, iron panel/TSH - up to one week).
