@@ -28,6 +28,12 @@ OPENAI_GPT_4O_MINI_TRANSCRIBE = "gpt-4o-mini-transcribe"
 WHISPER_LARGE_V3_TURBO = "large-v3-turbo"
 whisper_model = WhisperModel(WHISPER_LARGE_V3_TURBO, device="cpu", compute_type="int8")
 
+STRUCTURED_OUTPUT_KEYS = 'Return JSON with the keys: subjective, objective, assessment, plan.'
+VERBAL_TO_PROPER_NOTATION = ''.join([
+    "Text may contain verbalizations of measurements, ",
+    "so use proper written notations and units."
+])
+
 PROMPT_SUMMARIZATION = ''.join([
     "You are a medical assistant for summarizing patient encounters. ",
     "You expect a transcript of a doctor-patient conversation or related information. ",
@@ -38,6 +44,8 @@ PROMPT_SUMMARIZATION = ''.join([
     "Use professional medical terminology. ",
     "Use basic HTML styling. Do not wrap in extra strings or quotations. ",
     "Translate to English if transcript is in another language.",
+    STRUCTURED_OUTPUT_KEYS,
+    VERBAL_TO_PROPER_NOTATION
 ])
 
 PROMPT_EDIT = ''.join([
@@ -46,6 +54,8 @@ PROMPT_EDIT = ''.join([
     "Update the summary according to instructions.",
     "Use HTML styling consistent with the input, if formatting is requested. ",
     "Do not wrap in extra strings or quotations.",
+    STRUCTURED_OUTPUT_KEYS,
+    VERBAL_TO_PROPER_NOTATION
 ])
 
 CHUNK_SIZE_MB = 35      # Actual stored file size around 3 MB when set to 35
@@ -186,6 +196,7 @@ def split_mp3_to_chunks(mp3_path, chunk_size_mb):
         chunk.export(chunk_path, format="mp3")
         logger.info("Exported chunk_%03d.mp3 (%0.2fs)", i, (end - start)/1000)
         chunks.append(chunk_path)
+
     return chunks
 
 
@@ -196,7 +207,6 @@ def get_transcription_from_local_file(path: str, model_choice: str = WHISPER_LAR
 
     if WHISPER_LARGE_V3_TURBO in model_choice:
         # Local whisper model transcription
-        logger.info('transcribing with whisper large v3 turbo')
         segments, info = whisper_model.transcribe(path, beam_size=5)
         logger.info(
             "Detected language '%s' with probability %s",
@@ -208,7 +218,6 @@ def get_transcription_from_local_file(path: str, model_choice: str = WHISPER_LAR
         logger.info(segments)
     else:
         # Split audio into chunks
-        logger.info('transcribe with gpt')
         chunks = split_mp3_to_chunks(path, CHUNK_SIZE_MB)
 
         # Transcribe with OpenAI API transcription

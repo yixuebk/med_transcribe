@@ -146,5 +146,9 @@ if ENV_FILE.exists():
 
         # Local language model API config
         LOCAL_LLM_API_CONFIG = env.get('local_llm_api_config')
-        LOCAL_LLM_API_PORT = LOCAL_LLM_API_CONFIG.get('port')
-        LOCAL_LLM_API_MODELS = LOCAL_LLM_API_CONFIG.get('models')
+        if LOCAL_LLM_API_CONFIG:
+            LOCAL_LLM_API_PORT = LOCAL_LLM_API_CONFIG.get('port')
+            LOCAL_LLM_API_MODELS = LOCAL_LLM_API_CONFIG.get('models')
+        else:
+            LOCAL_LLM_API_PORT = None
+            LOCAL_LLM_API_MODELS = None
