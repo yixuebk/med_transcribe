@@ -7,6 +7,7 @@
 3. [Installation & Setup](#installation--setup)
    - [Python Virtual Environment](#python-virtual-environment)
    - [OpenAI API Key](#openai-api-key)
+   - [LM Studio Local Server Setup](#lm-studio-local-server-setup-optional)
    - [Database & Static Files](#database--static-files)
 4. [Starting the Server](#starting-the-server)
 5. [Navigating the Application](#navigating-the-application)
@@ -121,9 +122,39 @@ The **Medical Transcription** application is a locally hosted web application th
    }
    ```
 
-> **Tip:** To use local language models for SOAP note generation (e.g., MedGemma), you can set up a local AI server using a tool like [LM Studio](https://lmstudio.ai/). Simply start the local inference server in LM Studio and configure the `port` and `models` in the `local_llm_api_config` above to match your LM Studio server settings.
-
 > **Important:** Keep this file secure and do not commit it to version control. The `.gitignore` should already exclude it.
+
+---
+
+### LM Studio Local Server Setup (Optional)
+
+To use a local language model for SOAP note generation (e.g., MedGemma) instead of or alongside the OpenAI API, you can run a model locally through [LM Studio](https://lmstudio.ai/).
+
+#### 1. Download a Model
+
+1. Open LM Studio and navigate to the **Model Search** tab (magnifying glass icon on the left sidebar).
+2. Search for a medical language model such as `medgemma`.
+3. Select an appropriate model variant (e.g., **medgemma-4b-it-GGUF** from lmstudio-community) and click **Download**.
+
+![LM Studio model search — searching for and downloading a MedGemma model](../img/lmstudio_model_search.png)
+
+#### 2. Adjust Context Max Tokens
+
+1. In the **My Models** tab, select the downloaded model.
+2. On the right-hand panel, locate the **Context and Offload** section.
+3. Increase the **Context Length** value. The default may be too short for medical transcription SOAP note generation — a value of **10000** tokens or more is suggested, depending on the length of your audio transcripts.
+
+![LM Studio context settings — adjusting the context length for the selected model](../img/lmstudio_adjust_context_max_tokens.png)
+
+#### 3. Start the Server and Load Models
+
+1. Navigate to the **Developer** tab (code icon on the left sidebar).
+2. Toggle the **Status** switch to **Running** to start the local server.
+3. Note the **Reachable at** URL (default: `http://127.0.0.1:1234`).
+4. Click **+ Load Model** and select your downloaded model. It will appear under **Loaded Models** with a **READY** status once loaded.
+5. Ensure the `port` and `models` values in the `local_llm_api_config` section of your `.env` file match the LM Studio server settings.
+
+![LM Studio developer server — running the local server with MedGemma loaded](../img/lmstudio_start_server.png)
 
 ---
 
@@ -168,6 +199,8 @@ Once running, open your browser and navigate to:
 ```
 http://127.0.0.1:8000/transcriber/
 ```
+
+You can also use `localhost` instead of `127.0.0.1` (e.g., `http://localhost:8000/transcriber/`).
 
 ---
 

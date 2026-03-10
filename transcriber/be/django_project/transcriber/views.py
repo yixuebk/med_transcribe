@@ -4,17 +4,20 @@ import uuid
 import datetime
 import os
 import base64
+import socket
 
 # Django
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
 from django.forms import model_to_dict
 from django.utils import timezone
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 # Local
-from .models import Transcription
+from django_project.settings import LOCAL_LLM_API_PORT, LOCAL_LLM_API_MODELS
 
+from .models import Transcription
 from .forms import (
     TranscriptionAndSummarizationLanguageModelChoiceForm,
     BasicAudioFileForm,
@@ -49,6 +52,10 @@ def recorder(request):
         # Forms for editing reformatted text
         'edit_soap_form': RichTextInputForm(),
         'edit_chat_form': EditWithInstructionForm(),
+        'api': {
+            'basic_transcribe': reverse('transcriber:api_basic_transcribe'),
+            'update_soap': reverse('transcriber:api_update_soap'),
+        }
     }
 
     if request.method == 'POST':
@@ -59,6 +66,13 @@ def recorder(request):
 
             # Check if form is valid
             if form.is_valid():
+                # Return 503 if local LLM server is to be used but is not running
+                response_server_inactive = local_llm_server_access_inactive_response(
+                    form.cleaned_data['summarizer_model']
+                )
+                if response_server_inactive:
+                    return response_server_inactive
+
                 logger.info('Handling audio file upload.')
                 handle_audio_file_upload(request, form, context)
 
@@ -71,28 +85,10 @@ def recorder(request):
             else:
                 return HttpResponse(status=404, content='Invalid file upload form')
         else:
-            # If form for original transcript to generate new formatted text
-            if 'reformat' in request.POST:
-                # Load form data
-                form = EditTranscriptForm(request.POST)
-
-                # Check if form is valid
-                if form.is_valid():
-                    logger.info('Handling reformatting of original transcript.')
-                    handle_reformat_original_transcript(form, context)
-                else:
-                    return HttpResponse(status=404, content='Invalid reformat form')
-            # If form for edited transcript to generate new formatted text
-            elif 'reformat_edited' in request.POST:
-                # Load form data
-                form = EditTranscriptForm(request.POST)
-
-                # Check if form is valid
-                if form.is_valid():
-                    logger.info('Handling reformatting of edited transcript.')
-                    handle_reformat_edited_transcript(form, context)
-                else:
-                    return HttpResponse(status=404, content='Invalid edit reformat form')
+            # Handle edit transcript forms
+            response_edit_transcript = handle_edit_transcript(request, context)
+            if response_edit_transcript:
+                return response_edit_transcript
 
         # Prefill SOAP note edit form if applicable
         context['edit_soap_form'].initial = (
@@ -110,6 +106,10 @@ def result(request, query_id):
         # Forms for editing reformatted text
         'edit_soap_form': RichTextInputForm(),
         'edit_chat_form': EditWithInstructionForm(),
+        'api': {
+            'basic_transcribe': reverse('transcriber:api_basic_transcribe'),
+            'update_soap': reverse('transcriber:api_update_soap'),
+        }
     }
 
     try:
@@ -126,28 +126,10 @@ def result(request, query_id):
         return HttpResponse(status=404, content='Transcription not found for this filename.')
 
     if request.method == 'POST':
-        # If form for original transcript to generate new formatted text
-        if 'reformat' in request.POST:
-            # Load form data
-            form = EditTranscriptForm(request.POST)
-
-            # Check if form is valid
-            if form.is_valid():
-                logger.info('Handling reformatting of original transcript.')
-                handle_reformat_original_transcript(form, context)
-            else:
-                return HttpResponse(status=404, content='Invalid reformat form')
-        # If form for edited transcript to generate new formatted text
-        elif 'reformat_edited' in request.POST:
-            # Load form data
-            form = EditTranscriptForm(request.POST)
-
-            # Check if form is valid
-            if form.is_valid():
-                logger.info('Handling reformatting of edited transcript.')
-                handle_reformat_edited_transcript(form, context)
-            else:
-                return HttpResponse(status=404, content='Invalid edit reformat form')
+        # Handle edit transcript forms
+        response_edit_transcript = handle_edit_transcript(request, context)
+        if response_edit_transcript:
+            return response_edit_transcript
 
         # Set variable to updated transcription instance (otherwise it will provide previous values)
         # context['transcription'] points to updated instance, but transcription does not
@@ -242,6 +224,14 @@ def api_transcribe(request):
 
         # Check if form is valid
         if form.is_valid():
+            # Return 503 if local LLM server is to be used but is not running
+            response_server_inactive = local_llm_server_access_inactive_response(
+                model_name=form.cleaned_data['summarizer_model'],
+                json_response=True
+            )
+            if response_server_inactive:
+                return response_server_inactive
+
             logger.info('Handling audio file upload.')
             handle_audio_file_upload(request, form, context)
 
@@ -309,13 +299,21 @@ def api_update_soap(request):
                 transcription.formatted_text = form.cleaned_data['text']
                 transcription.save()
             else:
-                return HttpResponse(status=404, content='Invalid SOAP note edit form')
+                return JsonResponse(status=404, data={'error': 'Invalid SOAP note edit form'})
         # Handle form - edit with language model 'chat'
         elif 'edit_chat' in request.POST:
             form = EditWithInstructionForm(request.POST)
 
             # Check if form is valid
             if form.is_valid():
+            # Return 503 if local LLM server is to be used but is not running
+                response_server_inactive = local_llm_server_access_inactive_response(
+                    model_name=form.cleaned_data['summarizer_model'],
+                    json_response=True
+                )
+                if response_server_inactive:
+                    return response_server_inactive
+
                 logger.info('Handling SOAP note edit with LLM instruction.')
 
                 # Update SOAP note with LLM instruction
@@ -326,7 +324,7 @@ def api_update_soap(request):
                 )
                 transcription.save()
             else:
-                return HttpResponse(status=404, content='Invalid SOAP note edit form')
+                return JsonResponse(status=404, data={'error': 'Invalid SOAP note edit form'})
 
         # Add transcription to context (make it JSON-serializable)
         context['transcription'] = model_to_dict(transcription)
@@ -591,6 +589,47 @@ def handle_reformat_edited_transcript(form_obj, context_dict):
     context_dict['transcription'] = transcription
 
 
+def handle_edit_transcript(request_obj, context_obj):
+    """Handle edit transcript forms for HttpResponse views."""
+    # If form for original transcript to generate new formatted text
+    if 'reformat' in request_obj.POST:
+        # Load form data
+        form = EditTranscriptForm(request_obj.POST)
+
+        # Check if form is valid
+        if form.is_valid():
+            # Return 503 if local LLM server is to be used but is not running
+            response_server_inactive = local_llm_server_access_inactive_response(
+                form.cleaned_data['summarizer_model']
+            )
+            if response_server_inactive:
+                return response_server_inactive
+
+            logger.info('Handling reformatting of original transcript.')
+            handle_reformat_original_transcript(form, context_obj)
+        else:
+            return HttpResponse(status=404, content='Invalid reformat form')
+    # If form for edited transcript to generate new formatted text
+    elif 'reformat_edited' in request_obj.POST:
+        # Load form data
+        form = EditTranscriptForm(request_obj.POST)
+
+        # Check if form is valid
+        if form.is_valid():
+            # Return 503 if local LLM server is to be used but is not running
+            response_server_inactive = local_llm_server_access_inactive_response(
+                form.cleaned_data['summarizer_model']
+            )
+            if response_server_inactive:
+                return response_server_inactive
+
+            logger.info('Handling reformatting of edited transcript.')
+            handle_reformat_edited_transcript(form, context_obj)
+        else:
+            return HttpResponse(status=404, content='Invalid edit reformat form')
+    return None
+
+
 # General-use functions ----------------------------------------------------------------------------
 
 def pagination(request_obj, list_obj, items_per_page):
@@ -609,3 +648,40 @@ def pagination(request_obj, list_obj, items_per_page):
         page_obj = paginator.page(paginator.num_pages)
 
     return page_obj
+
+def is_local_llm_server_active():
+    """Check if the local LLM server is active by testing a TCP connection to the port."""
+    if not LOCAL_LLM_API_PORT:
+        return False
+    try:
+        with socket.create_connection(('127.0.0.1', LOCAL_LLM_API_PORT), timeout=3):
+            return True
+    except (ConnectionRefusedError, OSError):
+        return False
+
+def is_local_summarizer_model(model_name):
+    """Check if the given model name is a local summarization model."""
+    return LOCAL_LLM_API_MODELS and model_name in LOCAL_LLM_API_MODELS
+
+def local_llm_server_access_inactive_response(model_name, json_response=False):
+    """Return 503 response if local LLM server is to be used but is not running."""
+    if is_local_summarizer_model(model_name):
+        if not is_local_llm_server_active():
+            if json_response:
+                return JsonResponse(
+                    status=503,
+                    data={
+                        'error': ' '.join([
+                            'Local LLM server is not running.',
+                            'Please start the server or select a different model.'
+                        ])
+                    }
+                )
+            return HttpResponse(
+                status=503,
+                content=' '.join([
+                    'Local LLM server is not running.',
+                    'Please start the server or select a different model.'
+                ])
+            )
+    return None

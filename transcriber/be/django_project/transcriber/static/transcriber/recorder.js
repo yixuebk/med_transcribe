@@ -7,6 +7,15 @@ function formatTime(sec) {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+function floatTo16BitPCM(input) {
+    const output = new Int16Array(input.length);
+    for (let i = 0; i < input.length; i++) {
+        const s = Math.max(-1, Math.min(1, input[i]));
+        output[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    return output;
+}
+
 function getCSRFToken() {
     return document.cookie
         .split("; ")
@@ -14,15 +23,23 @@ function getCSRFToken() {
         ?.split("=")[1];
 }
 
-function fetchTranscription(url) {
+function fetchTranscription(url, formData) {
     fetch(url, {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCSRFToken(),
         },
         body: formData,
-    }).then((response) => response.json()
-    ).then((data) => {
+    }).then((response) => {
+        if (!response.ok) {
+            return response.json().then((data) => {
+                alert('Error ' + response.status + ': ' + data.error);
+                closeModal();
+                throw new Error(response.status);
+            });
+        }
+        return response.json();
+    }).then((data) => {
         // Hide no transcription message
         const noTranscriptionMessage = document.getElementById('no-transcription-message');
         noTranscriptionMessage.style.display = 'none';
@@ -66,34 +83,93 @@ function fetchTranscription(url) {
         // Hide modal
         closeModal();
     }).catch((error) => {
-        console.error('Error:', error);
+        console.error(error);
     });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Recorder variables
-    let audioContext;
-    let micStream;
-    let scriptProcessor;
-    let mp3Encoder;
-    let mp3Data = [];
+function fetchChatTranscription(url, formData) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+        },
+        body: formData,
+    }).then((response) => {
+        console.log(response);
+        if (!response.ok) {
+            return response.json().then((data) => {
+                alert('Error ' + response.status + ': ' + data.error);
+                closeModal();
+                throw new Error(response.status);
+            });
+        }
+        return response.json();
+    }).then((data) => {
+        // Get form elements
+        const form = document.getElementById('edit_chat');
 
-    // LLM voice input variables
-    let chatAudioContext;
-    let chatMicStream;
-    let chatScriptProcessor;
-    let chatMp3Encoder;
-    let chatMp3Data = [];
+        // Append transcript to input field
+        form.input.value += ` ${data.context.transcript}`;
 
+        // Hide modal
+        closeModal();
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
+function fetchUpdateSoap(url, formData, iframe, loadingElement) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+        },
+        body: formData,
+    }).then((response) => {
+        console.log(response);
+        if (!response.ok) {
+            return response.json().then((data) => {
+                alert('Error ' + response.status + ': ' + data.error);
+                closeModal();
+                throw new Error(response.status);
+            });
+        }
+        return response.json();
+    }).then(data => {
+        console.log('Form submitted successfully:', data);
+        if (iframe !== undefined) {
+            // Get form elements
+            const form = document.getElementById('edit_chat');
+
+            // Update iframe text editor if using language model instruction to edit
+            iframe.contentDocument.body.innerHTML = data.context.transcription.formatted_text;
+            // Clear instruction input
+            form.input.value = '';
+        }
+        // No changes if just direct edit, since it should already match what is in the editor
+
+        // Hide loading overlay if loading element is defined
+        if (loadingElement !== undefined) {
+            loadingElement.style.display = 'none';
+        }
+    }).catch(error => {
+        console.error(error);
+    });
+}
+
+function initRecorderElements() {
     // Recorder elements
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const audioPlayback = document.getElementById('audioPlayback');
     const downloadLink = document.getElementById('downloadLink');
 
-    // LLM voice input  elements
-    const voiceChatStartBtn = document.getElementById('voiceChatStartBtn');
-    const voiceChatStopBtn = document.getElementById('voiceChatStopBtn');
+    // Recorder variables
+    let audioContext;
+    let micStream;
+    let scriptProcessor;
+    let mp3Encoder;
+    let mp3Data = [];
 
     // Timer variables
     let timerInterval;
@@ -122,7 +198,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const input = event.inputBuffer.getChannelData(0);
             const int16 = floatTo16BitPCM(input);
             const mp3buf = mp3Encoder.encodeBuffer(int16);
-            if (mp3buf.length > 0) { mp3Data.push(new Int8Array(mp3buf));
+            if (mp3buf.length > 0) {
+                mp3Data.push(new Int8Array(mp3buf));
             }
         };
 
@@ -184,8 +261,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const waitMessage = ' (Stopped)';
         document.getElementById('timerDisplay').innerHTML += waitMessage;
 
-        // Create form data
-        const formData = new FormData();
+        // Create form data (extend llm choice form)
+        const llmChoiceForm = document.querySelector('form#llm-choice-form');
+        const formData = new FormData(llmChoiceForm);
         formData.append('file', blob, `${formattedDateTime}.mp3`);
         formData.append('new_file', true);
         formData.append('local_datetime', formattedDateTime);
@@ -195,9 +273,30 @@ document.addEventListener('DOMContentLoaded', function() {
         textModal('Please wait for transcription to complete...');
 
         // Send form data to server
-        fetchTranscription(url, token)
+        fetchTranscription(llmChoiceForm.action, formData)
     };
+}
 
+document.addEventListener('DOMContentLoaded', function () {
+    const api = JSON.parse(document.getElementById('api-data').textContent);
+
+    // Initialize recorder if on page with audio playback element
+    const audioPlayback = document.getElementById('audioPlayback');
+    if (audioPlayback) {
+        console.log('Initializing recorder');
+        initRecorderElements();
+    }
+
+    // LLM voice input variables
+    let chatAudioContext;
+    let chatMicStream;
+    let chatScriptProcessor;
+    let chatMp3Encoder;
+    let chatMp3Data = [];
+
+    // LLM voice input  elements
+    const voiceChatStartBtn = document.getElementById('voiceChatStartBtn');
+    const voiceChatStopBtn = document.getElementById('voiceChatStopBtn');
 
     // Voice chat buttons onclick actions
     voiceChatStartBtn.onclick = async () => {
@@ -213,7 +312,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const input = event.inputBuffer.getChannelData(0);
             const int16 = floatTo16BitPCM(input);
             const mp3buf = chatMp3Encoder.encodeBuffer(int16);
-            if (mp3buf.length > 0) { chatMp3Data.push(new Int8Array(mp3buf));
+            if (mp3buf.length > 0) {
+                chatMp3Data.push(new Int8Array(mp3buf));
             }
         };
 
@@ -228,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     voiceChatStopBtn.onclick = () => {
+        console.log(api.basic_transcribe);
         chatScriptProcessor.disconnect();
         chatMicStream.getTracks().forEach(track => track.stop());
         const mp3buf = chatMp3Encoder.flush();
@@ -237,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const blob = new Blob(chatMp3Data, { type: 'audio/mp3' });
-        const url = URL.createObjectURL(blob);
 
         voiceChatStartBtn.disabled = false;
         voiceChatStartBtn.style.display = 'inline-flex';
@@ -249,41 +349,13 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('file', blob, `instruction_audio.mp3`);
         formData.append('instruction_audio', true);
 
-        const chatForm = document.getElementById('edit_chat');
-
         // Show loading modal
         textModal('Please wait for voice instruction transcription to complete...');
 
         // Send form data to server
-        fetch("{% url 'transcriber:api_basic_transcribe' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-            body: formData,
-        }).then((response) => response.json()
-        ).then((data) => {
-            // Get form elements
-            const form = document.getElementById('edit_chat');
-
-            // Append transcript to input field
-            form.input.value += ` ${data.context.transcript}`;
-
-            // Hide modal
-            closeModal();
-        }).catch((error) => {
-            console.error('Error:', error);
-        });
+        fetchChatTranscription(api.basic_transcribe, formData);
     };
 
-    function floatTo16BitPCM(input) {
-        const output = new Int16Array(input.length);
-        for (let i = 0; i < input.length; i++) {
-            const s = Math.max(-1, Math.min(1, input[i]));
-            output[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-        }
-        return output;
-    }
 
     // Get direct edit and LLM edit forms
     const editSoapForm = document.getElementById('edit_soap');
@@ -307,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Get reformat form filename field for POST URL from transcript form (2 different forms possible)
                 const reformatForm = document.getElementById('reformat') || document.getElementById('reformat_edited');
                 formData.append('filename', reformatForm.filename.value);
-                
+
                 // Add distinguishing key for direct edit form
                 formData.append('edit_soap', true)
 
@@ -315,26 +387,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadingOverlay.style.display = 'flex';
 
                 // Send form data to server
-                fetch("{% url 'transcriber:api_update_soap'%}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                    },
-                    body: formData,
-                }).then(
-                    response => response.json()
-                ).then(data => {
-                    console.log('Form submitted successfully:', data);
-                    // No need to update as it should be the same as what is in the editor
-
-                    // Hide loading overlay
-                    loadingOverlay.style.display = 'none';
-                }).catch(error => {
-                    console.error('Error submitting form:', error);
-                });
+                fetchUpdateSoap(api.update_soap, formData, iframe, loadingOverlay);
             }
 
-            document.getElementById('edit_soap').addEventListener('submit', function(event) {
+            document.getElementById('edit_soap').addEventListener('submit', function (event) {
                 // Alternative form submit action
                 editSoapNote(editSoapForm);
             });
@@ -348,37 +404,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Get reformat form filename field for POST URL from transcript form (2 different forms possible)
                 const reformatForm = document.getElementById('reformat') || document.getElementById('reformat_edited');
                 formData.append('filename', reformatForm.filename.value);
-                
+
                 // Add distinguishing key for direct edit form
                 formData.append('edit_chat', true)
-                
+
                 // Display loading overlay to cover editor
                 loadingOverlay.style.display = 'flex';
 
                 // Send form data to server
-                fetch("{% url 'transcriber:api_update_soap'%}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                    },
-                    body: formData,
-                }).then(
-                    response => response.json()
-                ).then(data => {
-                    console.log('Form submitted successfully:', data);
-                    // Update iframe text editor
-                    iframe.contentDocument.body.innerHTML = data.context.transcription.formatted_text;
-                    // Clear instruction input
-                    form.input.value = '';
-
-                    // Hide loading overlay
-                    loadingOverlay.style.display = 'none';
-                }).catch(error => {
-                    console.error('Error submitting form:', error);
-                });
+                fetchUpdateSoap(api.update_soap, formData, iframe, loadingOverlay);
             }
 
-            document.getElementById('edit_chat').addEventListener('submit', function(event) {
+            document.getElementById('edit_chat').addEventListener('submit', function (event) {
                 // Alternative form submit action
                 editSoapNoteWithInstruction(editSoapInstructForm);
             });
@@ -389,12 +426,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('observer', observer);
 
     // Disable default form submit
-    document.getElementById('edit_soap').addEventListener('submit', function(event) {
+    document.getElementById('edit_soap').addEventListener('submit', function (event) {
         // Prevent the default form submission
-        event.preventDefault(); 
+        event.preventDefault();
     });
-    document.getElementById('edit_chat').addEventListener('submit', function(event) {
+    document.getElementById('edit_chat').addEventListener('submit', function (event) {
         // Prevent the default form submission
-        event.preventDefault(); 
+        event.preventDefault();
     });
 });
